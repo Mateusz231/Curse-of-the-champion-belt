@@ -29,6 +29,12 @@ local Challenges ={
    CHALLENGE_CHAMPION = Isaac.GetChallengeIdByName("Championssssss...")
 }
 
+
+
+local excluded_entities={
+	203,887,805,804,809,802,302,212,306,201,203,235,236,44,218,877,893,852,291,404,409,35,213
+}
+
 function mod:is_curse_active()
 	local level = game:GetLevel()
 	if level:GetCurses()== Curses.CURSE_CHAMPION  then 
@@ -58,8 +64,21 @@ custom_curse_sprite,
 end
 
 
+function mod:Is_Entity_Excluded(Entity)
+
+local entity_Type = Entity.Type
+
+for _, Excluded_type in ipairs(excluded_entities) do 
+	if entity_Type == Excluded_type then 
+		return true
+	end
+
+end
 
 
+return false
+
+end 
 
 
 
@@ -110,7 +129,13 @@ function mod:Test()
     local entities = Isaac.GetRoomEntities()
     for i = 1, #entities do
         local entity = entities[i]
-		local rand = math.random(0,25);
+
+		if mod:Is_Entity_Excluded(entity) then
+		goto skip 
+		else 	
+
+
+	local rand = math.random(0,25);
 		
 	
 	local rand2 = math.random(0,99)
@@ -139,18 +164,22 @@ function mod:Test()
             entity:ToNPC():MakeChampion(1, rand, true)
 			entity:ToNPC():AddHealth(999)
         end
+
+		
     end
 
+	::skip:: 
 
 end 
 
+end
 
 end
 
 
 
 
-function mod:Gowno()
+function mod:SpriteRender()
 
 	if MinimapAPI then 
 	return 
@@ -183,4 +212,4 @@ end
 
 mod:AddCallback(ModCallbacks.MC_POST_CURSE_EVAL, mod.Curse)
 mod:AddCallback(ModCallbacks.MC_POST_NEW_ROOM, mod.Test)
-mod:AddCallback(ModCallbacks.MC_POST_RENDER, mod.Gowno)
+mod:AddCallback(ModCallbacks.MC_POST_RENDER, mod.SpriteRender)
