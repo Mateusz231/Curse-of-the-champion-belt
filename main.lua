@@ -13,7 +13,6 @@ end)
 if not status then
     -- If MinimapAPI is not found, print a message or handle it
     print("MinimapAPI is not installed or couldn't be loaded.")
-    -- You can set a flag here to disable features related to MinimapAPI
     MinimapAPI = nil
 end
 
@@ -34,6 +33,38 @@ local Challenges ={
 local excluded_entities={
 	203,887,805,804,809,802,302,212,306,201,203,235,236,44,218,877,893,852,291,404,409,35,213
 }
+
+local champion_type_chance={
+
+	{type = "White", chance = 0, id=6},	
+	{type = "Rainbow", chance = 1, id=25},
+	{type = "Purple", chance = 1, id=11},
+	{type = "Red", chance = 4, id=0},
+	{type = "Green", chance = 4, id=2},
+	{type = "Black", chance = 4, id=5},
+	{type = "Grey", chance = 4, id=7},
+	{type = "Transparent", chance = 4, id=8},
+	{type = "Flicker", chance = 4, id=9},
+	{type = "Pink", chance = 4, id=10},
+	{type = "Dark_red", chance = 4, id=12},
+	{type = "Light_blue", chance = 4, id=13},
+	{type = "Camo", chance = 4, id=14},
+	{type = "Pulse_green", chance = 4, id=15},
+	{type = "Pulse_grey", chance = 4, id=16},
+	{type = "Fly_protected", chance = 4, id=17},
+	{type = "Tiny", chance = 4, id=18},
+	{type = "Giant", chance = 4, id=19},
+	{type = "Pulse_red", chance = 4, id=20},
+	{type = "Size_pulse", chance = 4, id=21},
+	{type = "King", chance = 4, id=22},
+	{type = "Death", chance = 4, id=23},
+	{type = "Brown", chance = 4,id=24},
+	{type = "Orange", chance = 6, id=3},
+	{type = "Blue", chance = 6, id=4},
+	{type = "Yellow", chance = 6, id=1},
+
+}
+
 
 function mod:is_curse_active()
 	local level = game:GetLevel()
@@ -68,17 +99,44 @@ function mod:Is_Entity_Excluded(Entity)
 
 local entity_Type = Entity.Type
 
-for _, Excluded_type in ipairs(excluded_entities) do 
-	if entity_Type == Excluded_type then 
-		return true
+	for _, Excluded_type in ipairs(excluded_entities) do 
+		if entity_Type == Excluded_type then 
+			return true
+		end
+
 	end
 
-end
 
-
-return false
+	return false
 
 end 
+
+
+function mod:roll_for_champion_type()
+	local totalChance = 0
+
+   
+    for _, champion in ipairs(champion_type_chance) do
+        totalChance = totalChance + champion.chance
+    end
+
+   
+    local rand = math.random(1, totalChance)
+
+    
+    local accumulatedChance = 0
+    for _, champion in ipairs(champion_type_chance) do
+        accumulatedChance = accumulatedChance + champion.chance
+		print(rand)
+		print()
+        if rand <= accumulatedChance then
+            --print("Selected Champion Type: " .. champion.type .. " with ID: " .. champion.id)
+            return champion.id  
+        end
+    end
+
+    return nil  
+end	
 
 
 
@@ -107,17 +165,12 @@ end
 local rand = math.random(0,99)
 
 if rand >= 0 and rand <= base_chance and level:GetCurses() ==0 then
-	print(Curses.CURSE_CHAMPION)
-	print(level:GetCurseName())
 	if status then
 	mod:map_flag_icon(Curses.CURSE_CHAMPION)
-	
 	end
 	return Curses.CURSE_CHAMPION
 
 end
---print(rand)
---print(level:GetCurses())
 
 
 end
@@ -133,35 +186,10 @@ function mod:Test()
 		if mod:Is_Entity_Excluded(entity) then
 		goto skip 
 		else 	
-
-
-	local rand = math.random(0,25);
-		
-	
-	local rand2 = math.random(0,99)
-	
-	while rand == 6 do 
-		rand = math.random(0,25);
-		
-	end 
-	
-	while rand2>25 and( rand==25 or rand==11) do 
-	rand = math.random(0,25)
-	rand2 = 2
-	end 
-	
-	
-	while rand == 6 do 
-		rand = math.random(0,25);
-		
-	end 
-	
-	
-	
         
         if entity:IsActiveEnemy() then
-     
-            entity:ToNPC():MakeChampion(1, rand, true)
+			local champion_type = mod:roll_for_champion_type()
+            entity:ToNPC():MakeChampion(1, champion_type, true)
 			entity:ToNPC():AddHealth(999)
         end
 
@@ -188,22 +216,18 @@ function mod:SpriteRender()
 	
 	if not MinimapAPI then
 
-
-	
             if mod:is_curse_active() and not Input.IsActionPressed(ButtonAction.ACTION_MAP, 0) then
-                local corner = Vector(Isaac.GetScreenWidth(), 0)
-                local HUDOffset = Options.HUDOffset * Vector(-50, 12)
-                local curOffset = 0
-                -- Isaac.GetScreenHeight()
-                -- Isaac.GetScreenWidth()
+            local corner = Vector(Isaac.GetScreenWidth(), 0)
+            local HUDOffset = Options.HUDOffset * Vector(-50, 12)
+            local curOffset = 0
 
-        
-                        custom_curse_sprite:SetFrame('Curse', 0)
-                        custom_curse_sprite:Render(corner + HUDOffset + Vector(-15, 60+(16*curOffset)), Vector.Zero, Vector.Zero)
-                        curOffset = curOffset + 1
-     
+            custom_curse_sprite:SetFrame('Curse', 0)
+            custom_curse_sprite:Render(corner + HUDOffset + Vector(-15, 60+(16*curOffset)), Vector.Zero, Vector.Zero)
+            curOffset = curOffset + 1
+
             end
-        end
+
+    end
 
     
 	
