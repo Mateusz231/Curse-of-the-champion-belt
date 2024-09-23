@@ -53,6 +53,25 @@ champion_type_chance={
 }
 
 
+
+function deepcopy(orig)
+    local orig_type = type(orig)
+    local copy
+    if orig_type == 'table' then
+        copy = {}
+        for orig_key, orig_value in next, orig, nil do
+            copy[deepcopy(orig_key)] = deepcopy(orig_value)
+        end
+        setmetatable(copy, deepcopy(getmetatable(orig)))
+    else 
+        copy = orig
+    end
+    return copy
+end
+
+local champion_type_chance_default = deepcopy(champion_type_chance)
+
+
 if MinimapAPI == nil then
 	status = false 
 	print("MinimapAPI is not installed or couldn't be loaded.")
@@ -94,9 +113,6 @@ if MinimapAPI == nil then
 		end
 	end
 
-	mod:LoadChampionSettings()
-
-
 	function mod:SaveChampionSettings()
 		local dataToSave = {}
 		for _, champion in ipairs(champion_type_chance) do
@@ -104,6 +120,21 @@ if MinimapAPI == nil then
 		end
 		mod:SaveData(json.encode(dataToSave))
 	end
+
+	function mod:ResetChampionSettingsToDefault()
+		for i, champion in ipairs(champion_type_chance_default) do
+			
+			champion_type_chance[i].chance = champion.chance
+			champion_type_chance[i].id = champion.id
+		end
+		
+		mod:SaveChampionSettings()
+	end
+
+	mod:LoadChampionSettings()
+
+
+
 	
 
 
@@ -113,22 +144,22 @@ if MinimapAPI == nil then
 	
 		ModConfigMenu.AddSetting(
 			name,
-			"Champion Settings", -- Subcategory Name
+			"Champion Settings", 
 			{
 				Type = ModConfigMenu.OptionType.NUMBER,
 				CurrentSetting = function()
 					return champion.chance
 				end,
 				
-				Minimum = 0, -- Minimum value for chance
-				Maximum = 100, -- Maximum value for chance
+				Minimum = 0, 
+				Maximum = 100, 
 				Display = function()
 					return champion.type .. " chance: " .. champion.chance .. "%"
 				end,
 				OnChange = function(newValue)
-					-- Ensure the new value is between 0 and 100
+					
 					champion.chance = math.max(0, math.min(100, newValue))
-					mod:SaveChampionSettings() -- Save the updated setting
+					mod:SaveChampionSettings() 
 				end,
 				Info = {"Set the spawn chance for the " .. champion.type .. " champion."}
 			}
@@ -137,6 +168,26 @@ if MinimapAPI == nil then
 	end 
 
 	--]]
+
+	ModConfigMenu.AddSetting(
+    name,  
+    "Champion Settings", 
+    {
+        Type = ModConfigMenu.OptionType.BOOLEAN,
+        Display = function()
+            return "Restore Default Values"
+        end,
+        CurrentSetting = function()
+            return false 
+        end,
+        OnChange = function(newValue)
+            if newValue then
+                mod:ResetChampionSettingsToDefault() 
+            end
+        end,
+        Info = {"Click to restore all champion chances to their default values."},
+    }
+)
 
 end
 
