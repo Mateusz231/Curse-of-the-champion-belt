@@ -2,20 +2,7 @@ local mod = RegisterMod("Curse of Champion Belt", 1)
 local game = Game()
 local custom_curse_sprite = Sprite()
 custom_curse_sprite:Load("gfx/ui/curse_champion_belt.anm2", true)
-
-
-
-local MinimapAPI
-local status, err = pcall(function()
-    MinimapAPI = require("scripts.minimapapi.init")
-end)
-
-if not status then
-    -- If MinimapAPI is not found, print a message or handle it
-    print("MinimapAPI is not installed or couldn't be loaded.")
-    MinimapAPI = nil
-end
-
+local json = require("json")
 
 
 
@@ -34,7 +21,7 @@ local excluded_entities={
 	203,887,805,804,809,802,302,212,306,201,203,235,236,44,218,877,893,852,291,404,409,35,213
 }
 
-local champion_type_chance={
+champion_type_chance={
 
 	{type = "White", chance = 0, id=6},	
 	{type = "Rainbow", chance = 1, id=25},
@@ -64,6 +51,95 @@ local champion_type_chance={
 	{type = "Yellow", chance = 6, id=1},
 
 }
+
+
+if MinimapAPI == nil then
+	status = false 
+	print("MinimapAPI is not installed or couldn't be loaded.")
+	else
+	status = true
+	end
+	
+	
+	
+	if ModConfigMenu == nil then 
+	status2 = false 
+	else 
+	status2 = true
+	end
+	
+	
+	
+	if status2 then 
+
+	local name = "Curse of the champion belt"
+	
+	ModConfigMenu.RemoveCategory(name)
+	
+	ModConfigMenu.UpdateCategory(name, {
+		Info = {"Curse of the champion belt"}
+	})
+	
+
+	function mod:LoadChampionSettings()
+		if mod:HasData() then
+			local savedData = json.decode(mod:LoadData())
+			if savedData then
+				for _, champion in ipairs(champion_type_chance) do
+					if savedData[champion.type] ~= nil then
+						champion.chance = savedData[champion.type]
+					end
+				end
+			end
+		end
+	end
+
+	mod:LoadChampionSettings()
+
+
+	function mod:SaveChampionSettings()
+		local dataToSave = {}
+		for _, champion in ipairs(champion_type_chance) do
+			dataToSave[champion.type] = champion.chance
+		end
+		mod:SaveData(json.encode(dataToSave))
+	end
+	
+
+
+	ModConfigMenu.AddText(name, "Champion Settings","Champion chance")
+	
+	for _, champion in ipairs(champion_type_chance) do 
+	
+		ModConfigMenu.AddSetting(
+			name,
+			"Champion Settings", -- Subcategory Name
+			{
+				Type = ModConfigMenu.OptionType.NUMBER,
+				CurrentSetting = function()
+					return champion.chance
+				end,
+				
+				Minimum = 0, -- Minimum value for chance
+				Maximum = 100, -- Maximum value for chance
+				Display = function()
+					return champion.type .. " chance: " .. champion.chance .. "%"
+				end,
+				OnChange = function(newValue)
+					-- Ensure the new value is between 0 and 100
+					champion.chance = math.max(0, math.min(100, newValue))
+					mod:SaveChampionSettings() -- Save the updated setting
+				end,
+				Info = {"Set the spawn chance for the " .. champion.type .. " champion."}
+			}
+		)
+	
+	end 
+
+	--]]
+
+end
+
 
 
 function mod:is_curse_active()
@@ -127,8 +203,8 @@ function mod:roll_for_champion_type()
     local accumulatedChance = 0
     for _, champion in ipairs(champion_type_chance) do
         accumulatedChance = accumulatedChance + champion.chance
-		print(rand)
-		print()
+		print(champion.type .. " " .. champion.chance)
+		--print()
         if rand <= accumulatedChance then
             --print("Selected Champion Type: " .. champion.type .. " with ID: " .. champion.id)
             return champion.id  
