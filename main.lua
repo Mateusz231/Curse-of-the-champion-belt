@@ -83,6 +83,7 @@ if MinimapAPI == nil then
 	
 	if ModConfigMenu == nil then 
 	status2 = false 
+	print("")
 	else 
 	status2 = true
 	end
@@ -167,7 +168,6 @@ if MinimapAPI == nil then
 	
 	end 
 
-	--]]
 
 	ModConfigMenu.AddSetting(
     name,  
@@ -254,10 +254,7 @@ function mod:roll_for_champion_type()
     local accumulatedChance = 0
     for _, champion in ipairs(champion_type_chance) do
         accumulatedChance = accumulatedChance + champion.chance
-		print(champion.type .. " " .. champion.chance)
-		--print()
         if rand <= accumulatedChance then
-            --print("Selected Champion Type: " .. champion.type .. " with ID: " .. champion.id)
             return champion.id  
         end
     end
@@ -279,7 +276,7 @@ end
 
 local level = game:GetLevel()
 local player = Isaac.GetPlayer(0)
-local base_chance = 99;
+local base_chance = 14;
 
 if player:HasCollectible(CollectibleType.COLLECTIBLE_CHAMPION_BELT) then 
 base_chance = base_chance + 7
@@ -302,7 +299,7 @@ end
 
 end
 
-function mod:Test()
+function mod:Spawn_champion()
 	local level = game:GetLevel()
 	if level:GetCurses() == Curses.CURSE_CHAMPION then 
 	local room = Game():GetRoom()
@@ -325,16 +322,16 @@ function mod:Test()
 
 	::skip:: 
 
-end 
+	end 
+
+	end
 
 end
 
-end
 
 
 
-
-function mod:SpriteRender()
+function mod:Sprite_render()
 
 	if MinimapAPI then 
 	return 
@@ -362,5 +359,5 @@ end
 
 
 mod:AddCallback(ModCallbacks.MC_POST_CURSE_EVAL, mod.Curse)
-mod:AddCallback(ModCallbacks.MC_POST_NEW_ROOM, mod.Test)
-mod:AddCallback(ModCallbacks.MC_POST_RENDER, mod.SpriteRender)
+mod:AddCallback(ModCallbacks.MC_POST_NEW_ROOM, mod.Spawn_champion)
+mod:AddCallback(ModCallbacks.MC_POST_RENDER, mod.Sprite_render)
